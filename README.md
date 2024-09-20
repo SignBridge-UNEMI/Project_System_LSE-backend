@@ -94,7 +94,7 @@ git clone https://github.com/SignBridge-UNEMI/Project_System_LSE-Front.git
     SECRET_KEY=tu_clave_secreta_aquí 
     ```
     
-    *   Reemplaza tu_clave_secreta_aquí con una clave secreta segura. Puedes generar una nueva usando:
+    - **Reemplaza** ```tu_clave_secreta_aquí``` con una clave secreta segura. Puedes generar una nueva usando:
 
     ```bash
     python -c 'import secrets; print(secrets.token_urlsafe(50))'
