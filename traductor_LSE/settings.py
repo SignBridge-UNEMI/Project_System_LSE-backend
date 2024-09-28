@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 from decouple import config
 
@@ -84,9 +85,14 @@ WSGI_APPLICATION = 'traductor_LSE.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        'ENGINE': config("DB_ENGINE", default="django.db.backends.postgresql"),
+        'NAME': config("DB_DATABASE", default=""),
+        'USER': config("DB_USERNAME", default=""),
+        'PASSWORD': config("DB_PASSWORD", default=""),
+        'HOST': config("DB_SOCKET", default=""),
+        'PORT': config("DB_PORT", default="5432"),
+        'ATOMIC_REQUESTS': True
     }
 }
 
