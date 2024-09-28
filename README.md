@@ -142,7 +142,7 @@ git clone https://github.com/SignBridge-UNEMI/Project_System_LSE-Front.git
 3.  **Crea un archivo .env.local y agrega las siguientes variables:**
 
     ```bash
-    NEXT_PUBLIC_CLERK_FRONTEND_API=tu_clerk_api_key
+    <!-- NEXT_PUBLIC_CLERK_FRONTEND_API=tu_clerk_api_key -->
     NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
     ```
 
