@@ -2,9 +2,10 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from .models import User
 
-
 # Registro
 class UserSerializer(serializers.ModelSerializer):
+    confirm_password = serializers.CharField(write_only=True, required=True)
+
     class Meta:
         model = User
         fields = [
@@ -12,15 +13,23 @@ class UserSerializer(serializers.ModelSerializer):
             "name",
             "email",
             "password",
+            "confirm_password",
             "is_deaf",
             "is_mute",
             "security_question_1",
             "security_answer_1",
-            "security_question_2",
+            "security_question_2",  
             "security_answer_2",
         ]
 
+    def validate(self, validated_data):
+        # Verificar que las contraseñas coincidan
+        if validated_data['password'] != validated_data['confirm_password']:
+            raise serializers.ValidationError({"password": "Las contraseñas no coinciden."})
+        return validated_data
+
     def create(self, validated_data):
+        validated_data.pop("confirm_password")  # Remover confirm_password antes de crear el usuario
         user = User(
             email=validated_data["email"],
             name=validated_data.get("name", ""),
