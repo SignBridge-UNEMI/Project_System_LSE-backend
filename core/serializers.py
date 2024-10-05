@@ -1,12 +1,10 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from .models import User
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.db import transaction
 
-# Serializador para el registro de usuarios
 class UserSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(write_only=True, required=True)
+    password = serializers.CharField(write_only=True, required=True)  # Asegúrate de que sea write_only
 
     class Meta:
         model = User
@@ -24,17 +22,17 @@ class UserSerializer(serializers.ModelSerializer):
             "security_answer_2",
         ]
 
+    def validate_email(self, value):
+        """Verifica que el email sea único."""
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Este correo electrónico ya está en uso.")
+        return value
+
     def validate(self, validated_data):
-        """
-        Validar los datos de entrada.
-        - Verifica que las contraseñas coincidan.
-        - Verifica que las respuestas de seguridad no estén vacías.
-        """
-        # Verificar que las contraseñas coincidan
+        """Validar los datos de entrada."""
         if validated_data['password'] != validated_data['confirm_password']:
             raise serializers.ValidationError({"password": "Las contraseñas no coinciden."})
 
-        # Validar respuestas de seguridad
         if not validated_data.get('security_answer_1'):
             raise serializers.ValidationError({"security_answer_1": "La respuesta a la pregunta de seguridad 1 es requerida."})
         if not validated_data.get('security_answer_2'):
@@ -43,32 +41,28 @@ class UserSerializer(serializers.ModelSerializer):
         return validated_data
 
     def create(self, validated_data):
-        """
-        Crear un nuevo usuario con los datos validados.
-        """
-        # Remover confirm_password antes de crear el usuario
+        """Crear un nuevo usuario con los datos validados."""
         validated_data.pop("confirm_password")
         
-        # Crear una instancia del usuario
         user = User(
             email=validated_data["email"],
             name=validated_data.get("name", ""),
             is_deaf=validated_data.get("is_deaf", False),
             is_mute=validated_data.get("is_mute", False),
             security_question_1=validated_data.get("security_question_1", ""),
-            security_answer_1=validated_data.get("security_answer_1", ""),
             security_question_2=validated_data.get("security_question_2", ""),
-            security_answer_2=validated_data.get("security_answer_2", ""),
         )
+
+        user.set_security_answer_1(validated_data.get("security_answer_1", ""))
+        user.set_security_answer_2(validated_data.get("security_answer_2", ""))
         
-        # Establecer la contraseña usando el método adecuado
         user.set_password(validated_data["password"])
         user.save()
         return user
 
 
-# Serializador para la lectura del usuario (excluye campos sensibles)
 class UserReadSerializer(serializers.ModelSerializer):
+    """Serializador para la lectura del usuario (excluye campos sensibles)."""
     class Meta:
         model = User
         fields = [
@@ -80,25 +74,20 @@ class UserReadSerializer(serializers.ModelSerializer):
         ]
 
 
-# Serializador para el inicio de sesión
 class LoginSerializer(serializers.Serializer):
+    """Serializador para el inicio de sesión."""
     email = serializers.EmailField(required=True)
     password = serializers.CharField(required=True)
 
     def validate(self, attrs):
-        """
-        Validar las credenciales del usuario durante el inicio de sesión.
-        """
+        """Validar las credenciales del usuario durante el inicio de sesión."""
         email = attrs.get("email")
         password = attrs.get("password")
 
-        # Autenticación del usuario utilizando el campo 'email'
-        user = authenticate(
-            request=self.context.get("request"), username=email, password=password
-        )
+        user = authenticate(request=self.context.get("request"), username=email, password=password)
 
         if user is None:
-            raise serializers.ValidationError("Credenciales inválidas")
+            raise serializers.ValidationError("Credenciales inválidas.")
 
         attrs["user"] = user  # Almacenar el usuario autenticado
         return attrs

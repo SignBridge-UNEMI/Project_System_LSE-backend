@@ -13,11 +13,20 @@ class User(AbstractUser):
     is_deaf = models.BooleanField(default=False)  # Indica si el usuario es sordo
     is_mute = models.BooleanField(default=False)  # Indica si el usuario es mudo
 
+    # Campo para el rol del usuario
+    ROLE_CHOICES = [
+        ('admin', 'Admin'),
+        ('user', 'User'),
+    ]
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')  # Rol del usuario
+
     # Campos de preguntas de seguridad
     security_question_1 = models.CharField(max_length=255, blank=True)  # Primera pregunta de seguridad
     security_answer_1 = models.CharField(max_length=255, blank=True)  # Respuesta a la primera pregunta de seguridad
     security_question_2 = models.CharField(max_length=255, blank=True)  # Segunda pregunta de seguridad
     security_answer_2 = models.CharField(max_length=255, blank=True)  # Respuesta a la segunda pregunta de seguridad
+
+    email_verified = models.BooleanField(default=False)  # Campo para verificar el email
 
     groups = models.ManyToManyField(
         "auth.Group",
