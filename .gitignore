@@ -51,6 +51,7 @@ Dockerfile*
 *.egg-info/
 dist/
 build/
+*__init__.py
 
 # Otros
 *.DS_Store
