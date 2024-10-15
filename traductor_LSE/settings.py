@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'core',
+    'modelo_LSE',
 ]
 
 AUTH_USER_MODEL = 'core.User'

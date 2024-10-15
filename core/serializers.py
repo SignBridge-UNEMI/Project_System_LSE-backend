@@ -28,6 +28,13 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Este correo electrónico ya está en uso.")
         return value
 
+    def validate_password(self, value):
+        """Asegura que la contraseña cumpla con ciertos criterios."""
+        if len(value) < 8:
+            raise serializers.ValidationError("La contraseña debe tener al menos 8 caracteres.")
+        # Puedes agregar más reglas aquí si lo deseas (ej: mayúsculas, números, etc.)
+        return value
+
     def validate(self, validated_data):
         """Validar los datos de entrada."""
         if validated_data['password'] != validated_data['confirm_password']:
@@ -88,6 +95,9 @@ class LoginSerializer(serializers.Serializer):
 
         if user is None:
             raise serializers.ValidationError("Credenciales inválidas.")
+
+        if not user.email_verified:
+            raise serializers.ValidationError("El correo no ha sido verificado. Por favor revisa tu bandeja de entrada.")
 
         attrs["user"] = user  # Almacenar el usuario autenticado
         return attrs

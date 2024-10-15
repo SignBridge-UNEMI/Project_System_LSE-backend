@@ -28,11 +28,14 @@ class RegisterView(generics.CreateAPIView):
             refresh = RefreshToken.for_user(user)
             access_token = refresh.access_token
 
+            # Aquí podrías enviar un correo de verificación al usuario
+            VerificationToken.create_for_user(user)
+
             return Response({
                 "user": UserSerializer(user, context=self.get_serializer_context()).data,
                 "refresh": str(refresh),  # Token de refresh JWT
                 "access": str(access_token),  # Token de acceso JWT
-                "message": "Usuario registrado correctamente.",
+                "message": "Usuario registrado correctamente. Por favor, verifica tu correo.",
             }, status=status.HTTP_201_CREATED)
 
 
@@ -53,6 +56,10 @@ class LoginSerializer(serializers.Serializer):
         if user is None:
             raise serializers.ValidationError("Credenciales incorrectas.")
 
+        # Verificar si el usuario ha verificado su correo
+        if not user.email_verified:
+            raise serializers.ValidationError("Debes verificar tu correo electrónico antes de iniciar sesión.")
+
         attrs['user'] = user
         return attrs
 
@@ -72,15 +79,22 @@ class LoginView(generics.GenericAPIView):
             # Autenticación del usuario
             user = serializer.validated_data['user']
             refresh = RefreshToken.for_user(user)
+            access_token = refresh.access_token
 
             # Crear respuesta
             response = Response({
-                'refresh': str(refresh),  # Token de refresh JWT
+                'access': str(access_token),  # Incluir access_token en el cuerpo
+                'refresh': str(refresh),      # Incluir refresh_token en el cuerpo
                 'message': 'Inicio de sesión exitoso'
             })
+
             # Establecer las cookies
-            response.set_cookie(key='access', value=str(refresh.access_token), httponly=True, samesite='None', secure=True)  # Cookie para el access
-            response.set_cookie(key='refresh', value=str(refresh), httponly=True, samesite='None', secure=True)  # Cookie para el refresh
+            response.set_cookie(
+                key='accessToken', value=str(access_token), httponly=True, samesite='None', secure=True
+            )
+            response.set_cookie(
+                key='refreshToken', value=str(refresh), httponly=True, samesite='None', secure=True
+            )
 
             return response
         except APIException as api_exception:
